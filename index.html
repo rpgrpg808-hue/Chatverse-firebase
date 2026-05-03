@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>ChatVerse • Bulut Sohbet</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #eae2d6; --header-bg: #075e54; --auth-bg: #f0f2f5; --card-bg: white;
+      --text: #111; --text-secondary: #667781; --chat-bg: #e5ddd5;
+      --msg-in: white; --msg-out: #dcf8c6; --input-bg: #f0f0f0; --search-bg: white;
+      --border: #f1f1f1; --hover: #f5f5f5; --overlay: rgba(0,0,0,0.6);
+    }
+    body.dark {
+      --bg: #0b141a; --header-bg: #1f2c33; --auth-bg: #0b141a; --card-bg: #1f2c33;
+      --text: #e9edef; --text-secondary: #8696a0; --chat-bg: #0b141a;
+      --msg-in: #1f2c33; --msg-out: #005c4b; --input-bg: #1f2c33; --search-bg: #1f2c33;
+      --border: #2a373f; --hover: #2a373f; --overlay: rgba(0,0,0,0.8);
+    }
+    body { font-family: 'Segoe UI', sans-serif; background: #111; height: 100dvh; display: flex; justify-content: center; align-items: center; color: var(--text); }
+    .app-container { width: 100%; max-width: 450px; height: 100dvh; max-height: 100dvh; background: var(--bg); box-shadow: 0 20px 45px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .app-header { background: var(--header-bg); color: white; padding: 10px 14px; display: none; align-items: center; gap: 8px; min-height: 56px; z-index: 10; }
+    .app-header.visible { display: flex; }
+    .back-btn { background: none; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 4px; }
+    .back-btn.show { display: flex; }
+    .header-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
+    .header-avatar { width: 38px; height: 38px; border-radius: 50%; background: #128c7e; display: none; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem; color: white; flex-shrink: 0; overflow: hidden; cursor: pointer; }
+    .header-avatar img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+    .header-avatar.show { display: flex; }
+    .title { font-size: 1.1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+    .header-actions { display: flex; align-items: center; gap: 4px; }
+    .icon-btn { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .icon-btn:hover { background: rgba(255,255,255,0.15); }
+    .logout-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .screen.active { display: flex; }
+    .auth-screen { background: var(--auth-bg); justify-content: center; align-items: center; padding: 20px; gap: 20px; }
+    .auth-logo { text-align: center; }
+    .logo-circle { width: 70px; height: 70px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+    .auth-logo h1 { color: var(--text); font-size: 1.6rem; }
+    .auth-logo p { color: var(--text-secondary); font-size: 0.85rem; }
+    .auth-box { background: var(--card-bg); padding: 24px 20px; border-radius: 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); width: 100%; max-width: 380px; }
+    .auth-box h2 { color: var(--text); margin-bottom: 18px; font-size: 1.2rem; }
+    .input-wrapper { display: flex; align-items: center; background: var(--search-bg); border-radius: 10px; padding: 0 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+    .input-wrapper input { width: 100%; padding: 14px 10px; border: none; background: transparent; font-size: 0.95rem; outline: none; color: var(--text); }
+    .auth-box > button { width: 100%; background: #25d366; border: none; color: white; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 1rem; margin-top: 8px; cursor: pointer; transition: 0.2s; }
+    .auth-box > button:hover { background: #1ebc56; }
+    .switch-text { margin-top: 14px; color: var(--text-secondary); font-size: 0.9rem; text-align: center; }
+    .switch-text a { color: #25d366; text-decoration: none; font-weight: bold; cursor: pointer; }
+    .search-bar { display: flex; align-items: center; background: var(--search-bg); margin: 8px 12px; padding: 8px 14px; border-radius: 25px; gap: 10px; border: 1px solid var(--border); }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 0.9rem; background: transparent; color: var(--text); }
+    .contact-list { flex: 1; overflow-y: auto; background: var(--card-bg); }
+    .contact-item { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.1s; gap: 12px; }
+    .contact-item:hover { background: var(--hover); }
+    .contact-avatar { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 1.2rem; overflow: hidden; cursor: pointer; }
+    .contact-avatar img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+    .contact-info { flex: 1; overflow: hidden; }
+    .contact-name { font-weight: 500; font-size: 1rem; display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
+    .contact-phone { color: var(--text-secondary); font-size: 0.8rem; margin-top: 2px; }
+    .contact-status { font-size: 0.75rem; margin-top: 1px; }
+    .contact-status.online { color: #25d366; font-weight: 500; }
+    .contact-status.offline { color: #888; }
+    .unread-badge { background: #25d366; color: white; border-radius: 50%; min-width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; padding: 0 4px; flex-shrink: 0; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px 12px; background: var(--chat-bg); display: flex; flex-direction: column; gap: 4px; }
+    .message-row { display: flex; margin-bottom: 3px; flex-direction: column; }
+    .message-row.outgoing { align-items: flex-end; }
+    .message-row.incoming { align-items: flex-start; }
+    .message-bubble { max-width: 78%; padding: 9px 13px; border-radius: 8px; font-size: 0.95rem; line-height: 1.45; word-break: break-word; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.05); color: var(--text); overflow-wrap: anywhere; }
+    .outgoing .message-bubble { background: var(--msg-out); border-radius: 8px 2px 8px 8px; }
+    .incoming .message-bubble { background: var(--msg-in); border-radius: 2px 8px 8px 8px; }
+    .message-time { display: block; text-align: right; font-size: 0.65rem; color: #888; margin-top: 2px; line-height: 1; }
+    .chat-input-area { display: flex; padding: 8px 10px; background: var(--input-bg); align-items: center; gap: 6px; flex-shrink: 0; margin-bottom: env(safe-area-inset-bottom, 0px); }
+    .chat-input-area input { flex: 1; padding: 10px 14px; border: none; border-radius: 25px; font-size: 0.95rem; outline: none; background: var(--card-bg); color: var(--text); }
+    .send-btn { background: #075e54; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .send-btn:active { background: #054d44; }
+    .modal-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--overlay); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: var(--card-bg); width: 90%; max-width: 380px; border-radius: 16px; overflow: hidden; }
+    .modal-header { background: var(--header-bg); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+    .modal-body { padding: 20px; }
+    .setting-item { margin-bottom: 20px; }
+    .setting-item label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text); }
+    .avatar-upload { display: flex; flex-direction: column; align-items: center; }
+    .avatar-preview { width: 90px; height: 90px; border-radius: 50%; background: #e0e0e0; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 2.5rem; color: white; font-weight: bold; }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+    #chooseAvatarBtn, #removeAvatarBtn, .save-btn { background: #25d366; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 6px; }
+    #removeAvatarBtn { background: #ff4d4f; }
+    .save-btn { width: 100%; margin-top: 10px; background: #075e54; }
+    .dark-mode-toggle { display: flex; justify-content: space-between; align-items: center; }
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 26px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: #25d366; }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .profile-card { background: var(--card-bg); width: 88%; max-width: 350px; border-radius: 20px; padding: 0; text-align: center; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
+    .profile-close { position: absolute; top: 8px; right: 14px; color: white !important; font-size: 28px; z-index: 10; }
+    .profile-avatar-large { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 14px; background: #075e54; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; font-weight: bold; overflow: hidden; }
+    .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+    .verified-badge { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 2px; flex-shrink: 0; }
+    .verified-badge img { width: 23px; height: 23px; object-fit: contain; pointer-events: none; user-select: none; }
+    .name-with-badge { display: inline-flex; align-items: center; vertical-align: middle; gap: 2px; }
+    .ai-badge { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 4px; background: #25d366; color: white; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 12px; letter-spacing: 0.5px; pointer-events: none; user-select: none; flex-shrink: 0; }
+    .bug-hunter-badge { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 4px; pointer-events: none; user-select: none; flex-shrink: 0; }
+    .bug-hunter-badge img { width: 23px; height: 23px; object-fit: contain; }
+    .gold-badge { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 4px; pointer-events: none; user-select: none; flex-shrink: 0; }
+    .gold-badge img { width: 23px; height: 23px; object-fit: contain; }
+    .lumina-status { color: #25d366 !important; font-weight: 500; font-style: italic; }
+    .corporate-profile-header { background: linear-gradient(135deg, #1a1a3e, #4a1a6b); padding: 20px; text-align: center; }
+    .corporate-profile-logo { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 10px; background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .corporate-profile-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .corporate-profile-info { padding: 20px; text-align: left; background: var(--card-bg); }
+    .corporate-profile-info p { margin: 8px 0; color: var(--text-secondary); font-size: 0.9rem; }
+    .corporate-profile-link { color: #4285F4; text-decoration: none; font-weight: bold; display: block; margin-top: 10px; }
+    .block-btn { background: #ff4d4f; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .unblock-btn { background: #25d366; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .banned-fullscreen { background: #f0f2f5; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 30px; gap: 16px; }
+    body.dark .banned-fullscreen { background: #0b141a; }
+    .banned-icon { width: 90px; height: 90px; border-radius: 50%; background: #ff4d4f; color: white; font-size: 3rem; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .banned-title { font-size: 1.3rem; font-weight: 600; color: #111; line-height: 1.4; }
+    body.dark .banned-title { color: #e9edef; }
+    .banned-desc { font-size: 0.9rem; color: #667781; line-height: 1.5; max-width: 300px; }
+    .banned-appeal { background: #075e54; color: white; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
+    .banned-logout { background: none; border: 1px solid #667781; color: #667781; padding: 10px 24px; border-radius: 25px; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+    @media (max-width: 500px) { .app-container { max-width: 100%; border-radius: 0; } }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="app-header" id="appHeader">
+    <button class="back-btn" id="backBtn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="header-left">
+      <div class="header-avatar" id="headerAvatar"></div>
+      <span class="title" id="headerTitle">Sohbetler</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="settingsBtn" title="Ayarlar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="logout-btn" id="logoutBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="authScreen" class="screen active auth-screen">
+    <div class="auth-logo">
+      <div class="logo-circle">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M17.5 10.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0zM3 20.5c0-3.5 7-5.5 11.5-5.5s11.5 2 11.5 5.5"/></svg>
+      </div>
+      <h1>ChatVerse</h1>
+      <p>Bulut • Güvenli • Hızlı</p>
+    </div>
+    <div class="auth-box">
+      <h2 id="authTitle">Giriş Yap</h2>
+      <div class="input-wrapper">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <input type="text" id="usernameInput" placeholder="Kullanıcı adı" autocomplete="off">
+      </div>
+      <div class="input-wrapper">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="password" id="passwordInput" placeholder="Şifre" autocomplete="off">
+      </div>
+      <button id="authActionBtn">Giriş Yap</button>
+      <p class="switch-text"><span id="switchText">Hesabın yok mu?</span> <a id="switchLink">Kayıt ol</a></p>
+    </div>
+  </div>
+
+  <div id="contactsScreen" class="screen">
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Kişi ara...">
+    </div>
+    <div class="contact-list" id="contactList"></div>
+  </div>
+
+  <div id="chatScreen" class="screen">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <button class="icon-btn emoji-btn">😊</button>
+      <input type="text" id="messageInput" placeholder="Mesaj yaz..." autocomplete="off">
+      <button class="icon-btn attach-btn">📎</button>
+      <button class="send-btn" id="sendBtn">➤</button>
+    </div>
+  </div>
+
+  <div id="bannedScreen" class="screen banned-fullscreen">
+    <div class="banned-icon">🚫</div>
+    <h2 class="banned-title">Bu hesap Chatverse'i kullanamaz</h2>
+    <p class="banned-desc">Hesabınız askıya alınmıştır.</p>
+    <button class="banned-appeal" id="bannedAppealBtn">Gözden geçirme iste</button>
+    <button class="banned-logout" id="bannedLogoutBtn">Çıkış Yap</button>
+  </div>
+
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header"><h3>Ayarlar</h3><button class="modal-close" id="closeSettingsBtn">&times;</button></div>
+      <div class="modal-body">
+        <div class="setting-item"><label>Profil Fotoğrafı</label>
+          <div class="avatar-upload">
+            <div class="avatar-preview" id="avatarPreview"></div>
+            <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+            <button id="chooseAvatarBtn">Galeriden Seç</button>
+            <button id="removeAvatarBtn">Kaldır</button>
+          </div>
+        </div>
+        <div class="setting-item"><p><strong>Kullanıcı adı:</strong> <span id="settingsUsername"></span></p><p><strong>Telefon:</strong> <span id="settingsPhone"></span></p></div>
+        <div class="setting-item dark-mode-toggle"><label>Karanlık Mod</label><label class="switch"><input type="checkbox" id="darkModeCheckbox"><span class="slider round"></span></label></div>
+        <div class="setting-item"><label>Engellenen Kullanıcılar</label><div id="blockedList" style="max-height:150px;overflow-y:auto;"></div></div>
+        <button id="saveSettingsBtn" class="save-btn">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="profileModal" class="modal-overlay">
+    <div class="profile-card" id="profileCardContent"></div>
+  </div>
+</div>
+
+<script>
+  // Firebase yapılandırması
+  const firebaseConfig = {
+    apiKey: "AIzaSyCFhijUmNit7Kj0BkTEP-rRPOxBWie7xB4",
+    authDomain: "chatverse-bb294.firebaseapp.com",
+    projectId: "chatverse-bb294",
+    storageBucket: "chatverse-bb294.firebasestorage.app",
+    messagingSenderId: "100539343956",
+    appId: "1:100539343956:web:2ec1fbf7a033965c0b79c1",
+    databaseURL: "https://chatverse-bb294-default-rtdb.europe-west1.firebasedatabase.app/"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Sabitler
+  const VERIFIED_USER = 'BaconPrime_Dev';
+  const BUGHUNTER_USER = 'Root_Overseer';
+  const LUMINA_USERNAME = 'Lumina';
+  const IOBROWSER_USER = 'IoBrowser';
+  const LUMINA_AVATAR_URL = 'https://i.imgur.com/1I0n5Id.png';
+  const BUGHUNTER_ICON_URL = 'https://i.imgur.com/I7av1dq.png';
+  const GOLD_BADGE_URL = 'https://i.imgur.com/Wl4wdKa.png';
+  const IOBROWSER_LOGO = 'https://i.imgur.com/NMBNZ4r.jpeg';
+  const MODERATION_IMMUNE = [VERIFIED_USER, BUGHUNTER_USER, LUMINA_USERNAME, IOBROWSER_USER, 'Nenega'];
+
+  // UI referansları
+  const appHeader = document.getElementById('appHeader');
+  const backBtn = document.getElementById('backBtn');
+  const headerAvatar = document.getElementById('headerAvatar');
+  const headerTitle = document.getElementById('headerTitle');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const authScreen = document.getElementById('authScreen');
+  const contactsScreen = document.getElementById('contactsScreen');
+  const chatScreen = document.getElementById('chatScreen');
+  const bannedScreen = document.getElementById('bannedScreen');
+  const authTitle = document.getElementById('authTitle');
+  const usernameInput = document.getElementById('usernameInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const authActionBtn = document.getElementById('authActionBtn');
+  const switchText = document.getElementById('switchText');
+  const switchLink = document.getElementById('switchLink');
+  const searchInput = document.getElementById('searchInput');
+  const contactListDiv = document.getElementById('contactList');
+  const chatMessages = document.getElementById('chatMessages');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const settingsModal = document.getElementById('settingsModal');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  const chooseAvatarBtn = document.getElementById('chooseAvatarBtn');
+  const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  const settingsUsername = document.getElementById('settingsUsername');
+  const settingsPhone = document.getElementById('settingsPhone');
+  const darkModeCheckbox = document.getElementById('darkModeCheckbox');
+  const blockedListDiv = document.getElementById('blockedList');
+  const profileModal = document.getElementById('profileModal');
+  const profileCardContent = document.getElementById('profileCardContent');
+  const bannedAppealBtn = document.getElementById('bannedAppealBtn');
+  const bannedLogoutBtn = document.getElementById('bannedLogoutBtn');
+
+  let currentUser = null;
+  let chatPartner = null;
+  let tempAvatarData = null;
+  let isLoginMode = true;
+
+  // Yardımcı fonksiyonlar
+  function randomPhone() {
+    const codes = ['+90','+1','+44','+49','+33','+81','+7','+39'];
+    return codes[Math.floor(Math.random()*codes.length)] + ' ' + Math.floor(100000000+Math.random()*900000000);
+  }
+
+  function chatKey(a,b) { return [a,b].sort().join('_'); }
+
+  function esc(s) { return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]); }
+
+  // Firebase işlemleri
+  async function getUsers() {
+    const snap = await db.ref('users').once('value');
+    return snap.val() || {};
+  }
+
+  async function saveUser(user) {
+    await db.ref('users/' + user.username).set(user);
+  }
+
+  async function getMessages(userA, userB) {
+    const key = chatKey(userA, userB);
+    const snap = await db.ref('messages/' + key).once('value');
+    return snap.val() || [];
+  }
+
+  async function saveMessage(userA, userB, msg) {
+    const key = chatKey(userA, userB);
+    const ref = db.ref('messages/' + key);
+    const snap = await ref.once('value');
+    const msgs = snap.val() || [];
+    msgs.push(msg);
+    await ref.set(msgs);
+  }
+
+  async function getBannedUsers() {
+    const snap = await db.ref('bannedUsers').once('value');
+    return snap.val() || {};
+  }
+
+  async function banUser(username) {
+    if (MODERATION_IMMUNE.includes(username)) return;
+    await db.ref('bannedUsers/' + username).set(true);
+  }
+
+  // Ekran geçişleri
+  function showScreen(scr) {
+    [authScreen, contactsScreen, chatScreen, bannedScreen].forEach(s => s.classList.remove('active'));
+    scr.classList.add('active');
+  }
+
+  function updateHeaderUI(titleText, showBack=false, avatarSrc=null, initial='', partnerUsername='') {
+    if (partnerUsername === VERIFIED_USER) headerTitle.innerHTML = `${partnerUsername} <span class="verified-badge"><img src="https://i.imgur.com/14PqZwx.png" alt="✓"></span>`;
+    else if (partnerUsername === LUMINA_USERNAME) headerTitle.innerHTML = `${partnerUsername} <span class="ai-badge">AI</span>`;
+    else if (partnerUsername === BUGHUNTER_USER) headerTitle.innerHTML = `${partnerUsername} <span class="bug-hunter-badge"><img src="${BUGHUNTER_ICON_URL}" alt="Bug Hunter"></span>`;
+    else if (partnerUsername === IOBROWSER_USER) headerTitle.innerHTML = `${partnerUsername} <span class="gold-badge"><img src="${GOLD_BADGE_URL}" alt="Altın"></span>`;
+    else headerTitle.textContent = titleText;
+
+    backBtn.classList.toggle('show', showBack);
+    if (avatarSrc) { headerAvatar.innerHTML = `<img src="${avatarSrc}">`; headerAvatar.classList.add('show'); }
+    else if (initial) { headerAvatar.textContent = initial; headerAvatar.classList.add('show'); }
+    else if (partnerUsername === IOBROWSER_USER) { headerAvatar.innerHTML = `<img src="${IOBROWSER_LOGO}">`; headerAvatar.classList.add('show'); }
+    else headerAvatar.classList.remove('show');
+  }
+
+  // Kayıt/Giriş
+  switchLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    isLoginMode = !isLoginMode;
+    authTitle.textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+    authActionBtn.textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol';
+    switchText.textContent = isLoginMode ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?';
+    switchLink.textContent = isLoginMode ? 'Kayıt ol' : 'Giriş yap';
+  });
+
+  authActionBtn.addEventListener('click', async () => {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+    if (!username || !password) return alert('Kullanıcı adı ve şifre gerekli.');
+
+    const users = await getUsers();
+    const banned = await getBannedUsers();
+
+    if (isLoginMode) {
+      const user = users[username];
+      if (!user || user.password !== password) return alert('Hatalı giriş.');
+      if (banned[username]) { showScreen(bannedScreen); appHeader.classList.remove('visible'); return; }
+      currentUser = user;
+      enterApp();
+    } else {
+      if (users[username]) return alert('Kullanıcı adı alınmış.');
+      const newUser = { username, password, phone: randomPhone(), avatar: null };
+      await saveUser(newUser);
+      currentUser = newUser;
+      alert(`Kayıt başarılı!\nNumaran: ${newUser.phone}`);
+      enterApp();
+    }
+    usernameInput.value = '';
+    passwordInput.value = '';
+  });
+
+  // Çıkış
+  logoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    chatPartner = null;
+    showScreen(authScreen);
+    appHeader.classList.remove('visible');
+  });
+
+  backBtn.addEventListener('click', () => {
+    chatPartner = null;
+    showContactsScreen();
+  });
+
+  bannedLogoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    showScreen(authScreen);
+    appHeader.classList.remove('visible');
+  });
+
+  // Ana fonksiyonlar
+  function enterApp() {
+    appHeader.classList.add('visible');
+    showContactsScreen();
+  }
+
+  async function showContactsScreen() {
+    if (!currentUser) return;
+    updateHeaderUI('Sohbetler', false, null, '', '');
+    const users = await getUsers();
+    const banned = await getBannedUsers();
+
+    let userList = Object.values(users).filter(u => u.username !== currentUser.username && !banned[u.username]);
+
+    // Son mesaja göre sırala
+    for (let u of userList) {
+      const msgs = await getMessages(currentUser.username, u.username);
+      u.lastMsgTime = msgs.length ? msgs[msgs.length-1].time : 0;
+    }
+    userList.sort((a,b) => b.lastMsgTime - a.lastMsgTime);
+
+    renderContactList(userList);
+    showScreen(contactsScreen);
+  }
+
+  function renderContactList(users) {
+    contactListDiv.innerHTML = '';
+    if (!users.length) {
+      contactListDiv.innerHTML = '<div style="padding:30px;text-align:center;">Henüz kayıtlı kullanıcı yok.</div>';
+      return;
+    }
+
+    users.forEach(u => {
+      const isVerified = u.username === VERIFIED_USER;
+      const isLumina = u.username === LUMINA_USERNAME;
+      const isBugHunter = u.username === BUGHUNTER_USER;
+      const isIoBrowser = u.username === IOBROWSER_USER;
+
+      const avHtml = isIoBrowser ? `<img src="${IOBROWSER_LOGO}">` : (u.avatar ? `<img src="${u.avatar}">` : u.username.charAt(0).toUpperCase());
+      const bg = isIoBrowser ? 'transparent' : (u.avatar ? 'transparent' : '#075e54');
+
+      const div = document.createElement('div');
+      div.className = 'contact-item';
+      div.innerHTML = `
+        <div class="contact-avatar" style="background:${bg}">${avHtml}</div>
+        <div class="contact-info">
+          <span class="contact-name name-with-badge">
+            ${u.username}
+            ${isVerified ? '<span class="verified-badge"><img src="https://i.imgur.com/14PqZwx.png"></span>' : ''}
+            ${isLumina ? '<span class="ai-badge">AI</span>' : ''}
+            ${isBugHunter ? `<span class="bug-hunter-badge"><img src="${BUGHUNTER_ICON_URL}"></span>` : ''}
+            ${isIoBrowser ? `<span class="gold-badge"><img src="${GOLD_BADGE_URL}"></span>` : ''}
+          </span>
+          <div class="contact-phone">${u.phone || ''}</div>
+          <div class="contact-status online">${isLumina ? 'Lumina AI' : (isIoBrowser ? 'IoBrowser' : 'çevrimiçi')}</div>
+        </div>
+      `;
+      div.addEventListener('click', () => openChat(u.username));
+      contactListDiv.appendChild(div);
+    });
+  }
+
+  async function openChat(partner) {
+    if (!currentUser) return;
+    chatPartner = partner;
+    const users = await getUsers();
+    const partnerUser = users[partner];
+    updateHeaderUI(partner, true, partnerUser?.avatar || null, '', partner);
+    showScreen(chatScreen);
+    renderMessages();
+  }
+
+  async function renderMessages() {
+    if (!currentUser || !chatPartner) return;
+    const msgs = await getMessages(currentUser.username, chatPartner);
+    chatMessages.innerHTML = '';
+
+    msgs.forEach(m => {
+      const d = new Date(m.time);
+      const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      const isMe = m.from === currentUser.username;
+      const row = document.createElement('div');
+      row.className = `message-row ${isMe ? 'outgoing' : 'incoming'}`;
+      row.innerHTML = `<div class="message-bubble">${esc(m.text)}<span class="message-time">${timeStr}</span></div>`;
+      chatMessages.appendChild(row);
+    });
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  sendBtn.addEventListener('click', sendMsg);
+  messageInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMsg(); });
+
+  async function sendMsg() {
+    const text = messageInput.value.trim();
+    if (!text || !chatPartner || !currentUser) return;
+
+    const msg = { from: currentUser.username, text, time: Date.now() };
+    await saveMessage(currentUser.username, chatPartner, msg);
+    messageInput.value = '';
+    renderMessages();
+
+    // Lumina cevap
+    if (chatPartner === LUMINA_USERNAME) {
+      try {
+        const res = await fetch('https://chatgpt-production-1b97.up.railway.app/chat', {
+          method:'POST', headers:{'Content-Type':'application/json','X-API-Key':'test-api-key-mira-001'},
+          body: JSON.stringify({ message: text, user: currentUser.username })
+        });
+        const data = await res.json();
+        let reply = (data.reply || data.message || 'Üzgünüm...').replace(/\*\*/g,'');
+        await saveMessage(currentUser.username, chatPartner, { from: LUMINA_USERNAME, text: reply, time: Date.now() });
+        renderMessages();
+      } catch(e) {}
+    }
+  }
+
+  // Ayarlar
+  settingsBtn.addEventListener('click', () => {
+    if (!currentUser) return;
+    settingsUsername.textContent = currentUser.username;
+    settingsPhone.textContent = currentUser.phone;
+    avatarPreview.innerHTML = currentUser.avatar ? `<img src="${currentUser.avatar}">` : currentUser.username.charAt(0).toUpperCase();
+    tempAvatarData = currentUser.avatar;
+    darkModeCheckbox.checked = document.body.classList.contains('dark');
+    settingsModal.classList.add('show');
+  });
+
+  closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('show'));
+  chooseAvatarBtn.addEventListener('click', () => avatarFileInput.click());
+
+  avatarFileInput.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      tempAvatarData = ev.target.result;
+      avatarPreview.innerHTML = `<img src="${tempAvatarData}">`;
+    };
+    r.readAsDataURL(f);
+  });
+
+  removeAvatarBtn.addEventListener('click', () => {
+    tempAvatarData = null;
+    avatarPreview.innerHTML = currentUser.username.charAt(0).toUpperCase();
+  });
+
+  saveSettingsBtn.addEventListener('click', async () => {
+    if (!currentUser) return;
+    currentUser.avatar = tempAvatarData;
+    await saveUser(currentUser);
+    settingsModal.classList.remove('show');
+    showContactsScreen();
+  });
+
+  // Karanlık mod
+  function applyDarkMode(enabled) {
+    document.body.classList.toggle('dark', enabled);
+    localStorage.setItem('cv_dark', enabled);
+  }
+
+  darkModeCheckbox.addEventListener('change', () => applyDarkMode(darkModeCheckbox.checked));
+
+  // Başlangıç
+  (async function init() {
+    const savedDark = localStorage.getItem('cv_dark') === 'true';
+    applyDarkMode(savedDark);
+    darkModeCheckbox.checked = savedDark;
+
+    // Özel hesapları oluştur
+    const users = await getUsers();
+    if (!users[VERIFIED_USER]) await saveUser({ username: VERIFIED_USER, password: 'Bacon2024!', phone: '+1 555 000 0001', avatar: null });
+    if (!users[LUMINA_USERNAME]) await saveUser({ username: LUMINA_USERNAME, password: '', phone: '', avatar: LUMINA_AVATAR_URL });
+    if (!users[IOBROWSER_USER]) await saveUser({ username: IOBROWSER_USER, password: '', phone: '', avatar: IOBROWSER_LOGO });
+
+    // Nenega banını kaldır
+    const banned = await getBannedUsers();
+    if (banned['Nenega']) await db.ref('bannedUsers/Nenega').remove();
+
+    showScreen(authScreen);
+  })();
+</script>
+</body>
+</html>
