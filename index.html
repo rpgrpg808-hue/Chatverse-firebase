@@ -13,236 +13,153 @@
 
         body {
             background-color: #0a0a0f;
-            color: #b0b0c0;
+            color: #a0a0b0;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            text-align: center;
             padding: 2rem;
         }
 
-        .logo-area {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #404050;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #202030;
-            padding-bottom: 0.3rem;
-        }
-
-        .card {
-            background-color: #0f0f17;
-            border: 1px solid #1f1f2c;
-            border-radius: 12px;
-            padding: 3rem 2.5rem;
-            max-width: 520px;
+        .content {
+            max-width: 500px;
             width: 100%;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-            text-align: left;
         }
 
-        .status-row {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
+        .icon {
+            font-size: 5rem;
             margin-bottom: 1.5rem;
-        }
-
-        .led {
-            width: 10px;
-            height: 10px;
-            background-color: #ff3b30;
-            border-radius: 50%;
-            box-shadow: 0 0 12px #ff3b30;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .status-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            color: #ff3b30;
-            text-transform: uppercase;
-        }
-
-        .http-code {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 0.4rem;
-            letter-spacing: -0.2px;
+            opacity: 0.8;
         }
 
         .title {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 600;
             color: #ffffff;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.3px;
         }
 
         .subtitle {
             font-size: 1rem;
-            color: #8e8ea0;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
+            color: #7e7e8c;
+            margin-bottom: 2rem;
+            line-height: 1.6;
         }
 
         .divider {
+            width: 60px;
+            height: 1px;
+            background-color: #262635;
+            margin: 0 auto 2rem auto;
             border: none;
-            border-top: 1px solid #232330;
-            margin: 1.5rem 0;
         }
 
-        .description {
+        .note {
             font-size: 0.85rem;
-            color: #6b6b7e;
-            line-height: 1.6;
-            margin-bottom: 1.8rem;
+            color: #5e5e6e;
+            margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
         .reference-box {
-            background-color: #0c0c14;
-            border: 1px solid #1a1a28;
+            background-color: #0e0e14;
+            border: 1px solid #1c1c28;
             border-radius: 6px;
-            padding: 0.8rem 1rem;
-            display: flex;
+            padding: 0.7rem 1rem;
+            display: inline-flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
+            gap: 0.8rem;
             flex-wrap: wrap;
-            margin-bottom: 1.2rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
         }
 
         .ref-label {
-            font-size: 0.7rem;
-            color: #5a5a70;
+            color: #545466;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            white-space: nowrap;
         }
 
         .ref-code {
             font-family: 'SF Mono', 'Fira Code', monospace;
-            font-size: 0.75rem;
-            color: #4a4a5c;
-            flex: 1;
-            word-break: break-all;
-            text-align: right;
+            color: #3f3f50;
         }
 
         .copy-btn {
             background: none;
-            border: 1px solid #2a2a3a;
-            color: #7a7a90;
-            font-size: 0.7rem;
-            padding: 0.25rem 0.7rem;
+            border: 1px solid #262636;
+            color: #6a6a7c;
+            padding: 0.2rem 0.8rem;
             border-radius: 4px;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            font-size: 0.7rem;
             transition: 0.2s;
-            white-space: nowrap;
         }
 
         .copy-btn:hover {
-            background-color: #1f1f2c;
-            color: #d0d0e0;
-            border-color: #4a4a5c;
+            background-color: #1a1a26;
+            color: #ccc;
         }
 
-        .timestamp-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.7rem;
-            color: #454555;
-        }
-
-        .server-time {
+        .timestamp {
             font-family: 'SF Mono', 'Fira Code', monospace;
-            color: #5a5a70;
-        }
-
-        @media (max-width: 500px) {
-            .card {
-                padding: 2rem 1.5rem;
-            }
-            .title {
-                font-size: 1.5rem;
-            }
-            .logo-area {
-                top: 1rem;
-                left: 1rem;
-                font-size: 0.7rem;
-            }
+            font-size: 0.75rem;
+            color: #4a4a5c;
         }
     </style>
 </head>
 <body>
-    <div class="logo-area">CHATVERSE</div>
+    <div class="content">
+        <!-- Büyük yasak simgesi (isteğe bağlı değiştir: 🚫 ⛔ 🛑) -->
+        <div class="icon">🛑</div>
 
-    <div class="card">
-        <!-- Durum LED ve etiket -->
-        <div class="status-row">
-            <div class="led"></div>
-            <span class="status-label">Offline</span>
+        <div class="title">503 Service Unavailable</div>
+        <div class="subtitle">
+            This site has been permanently shut down.
         </div>
-
-        <!-- HTTP kodu ve başlık -->
-        <div class="http-code">503</div>
-        <div class="title">Service Unavailable</div>
-        <div class="subtitle">This endpoint has been permanently shut down.</div>
 
         <hr class="divider">
 
-        <!-- Teknik açıklama -->
-        <div class="description">
-            If you are the administrator, verify your infrastructure configuration.
-            No further action is required from visitors. This service is no longer
-            operational and all inbound requests are rejected.
+        <div class="note">
+            All inbound requests are rejected. No further action is<br>
+            required from visitors. If you are the administrator,<br>
+            verify your infrastructure settings.
         </div>
 
-        <!-- Referans kodu -->
+        <!-- Referans kodu (statik, istersen dinamik yapabiliriz) -->
         <div class="reference-box">
-            <span class="ref-label">Reference ID</span>
+            <span class="ref-label">Ref</span>
             <span class="ref-code">x9Ym2LpQ_3wTrfK1nsO_Ag</span>
             <button class="copy-btn" onclick="copyRef()">Copy</button>
         </div>
 
-        <!-- Canlı zaman damgası -->
-        <div class="timestamp-row">
-            <span>Server Time (UTC)</span>
-            <span class="server-time" id="liveTimestamp">--</span>
-        </div>
+        <!-- Canlı sunucu saati -->
+        <div class="timestamp" id="liveTimestamp">--</div>
     </div>
 
     <script>
         // Canlı UTC saat
-        function updateTimestamp() {
+        function updateTime() {
             const now = new Date();
-            const iso = now.toISOString().replace('T', ' ').slice(0, 19) + 'Z';
-            document.getElementById('liveTimestamp').innerText = iso;
+            const iso = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+            document.getElementById('liveTimestamp').textContent = iso;
         }
-        updateTimestamp();
-        setInterval(updateTimestamp, 1000);
+        updateTime();
+        setInterval(updateTime, 1000);
 
-        // Referans kopyalama
+        // Copy fonksiyonu
         function copyRef() {
-            const code = document.querySelector('.ref-code').innerText;
+            const code = document.querySelector('.ref-code').textContent;
             navigator.clipboard.writeText(code).then(() => {
                 const btn = document.querySelector('.copy-btn');
-                btn.innerText = 'Copied';
-                setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+                btn.textContent = 'Copied';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
             });
         }
     </script>
