@@ -3,100 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Unavailable</title>
+    <title>503 Service Unavailable</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #0f0e17;
-            color: #a7a9be;
+            background-color: #0a0a0f;
+            color: #b0b0c0;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            text-align: center;
-            font-weight: 400;
-        }
-        .container {
-            max-width: 560px;
             padding: 2rem;
         }
-        .icon {
-            font-size: 3.5rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.7;
-        }
-        h1 {
-            font-size: 1.75rem;
-            font-weight: 500;
-            color: #fffffe;
-            margin-bottom: 0.8rem;
-            letter-spacing: -0.3px;
-        }
-        p {
-            font-size: 0.95rem;
-            color: #a7a9be;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .note {
+
+        .logo-area {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
             font-size: 0.8rem;
-            color: #5c5b6e;
-            margin-bottom: 2rem;
+            font-weight: 500;
+            color: #404050;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #202030;
+            padding-bottom: 0.3rem;
         }
-        .footer {
+
+        .card {
+            background-color: #0f0f17;
+            border: 1px solid #1f1f2c;
+            border-radius: 12px;
+            padding: 3rem 2.5rem;
+            max-width: 520px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            text-align: left;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            background-color: #ff3b30;
+            border-radius: 50%;
+            box-shadow: 0 0 12px #ff3b30;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .status-label {
             font-size: 0.75rem;
-            color: #5c5b6e;
-            border-top: 1px solid #2c2a3a;
-            padding-top: 1.5rem;
-            margin-top: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: #ff3b30;
+            text-transform: uppercase;
+        }
+
+        .http-code {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.2px;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #8e8ea0;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #232330;
+            margin: 1.5rem 0;
+        }
+
+        .description {
+            font-size: 0.85rem;
+            color: #6b6b7e;
+            line-height: 1.6;
+            margin-bottom: 1.8rem;
+        }
+
+        .reference-box {
+            background-color: #0c0c14;
+            border: 1px solid #1a1a28;
+            border-radius: 6px;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+        }
+
+        .ref-label {
+            font-size: 0.7rem;
+            color: #5a5a70;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+        }
+
+        .ref-code {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: #4a4a5c;
+            flex: 1;
+            word-break: break-all;
+            text-align: right;
+        }
+
+        .copy-btn {
+            background: none;
+            border: 1px solid #2a2a3a;
+            color: #7a7a90;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-        a {
-            color: #7f5af0;
-            text-decoration: none;
-            border: 1px solid #7f5af0;
-            padding: 0.4rem 1.2rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
             transition: 0.2s;
-            display: inline-block;
-            margin-top: 0.5rem;
+            white-space: nowrap;
         }
-        a:hover {
-            background-color: #7f5af0;
-            color: #fffffe;
+
+        .copy-btn:hover {
+            background-color: #1f1f2c;
+            color: #d0d0e0;
+            border-color: #4a4a5c;
         }
-        .request-id {
-            font-family: monospace;
+
+        .timestamp-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 0.7rem;
-            color: #4a4957;
-            margin-top: 2rem;
-            word-break: break-all;
+            color: #454555;
+        }
+
+        .server-time {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            color: #5a5a70;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 2rem 1.5rem;
+            }
+            .title {
+                font-size: 1.5rem;
+            }
+            .logo-area {
+                top: 1rem;
+                left: 1rem;
+                font-size: 0.7rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">🚫</div>
-        <h1>Service Unavailable</h1>
-        <p>
-            This service is currently offline. No further access is permitted.
-        </p>
-        <div class="note">
-            If you are the administrator, check your infrastructure settings.<br>
-            Otherwise, this endpoint is intentionally disabled.
+    <div class="logo-area">CHATVERSE</div>
+
+    <div class="card">
+        <!-- Durum LED ve etiket -->
+        <div class="status-row">
+            <div class="led"></div>
+            <span class="status-label">Offline</span>
         </div>
-        <div class="footer">
-            End of service
+
+        <!-- HTTP kodu ve başlık -->
+        <div class="http-code">503</div>
+        <div class="title">Service Unavailable</div>
+        <div class="subtitle">This endpoint has been permanently shut down.</div>
+
+        <hr class="divider">
+
+        <!-- Teknik açıklama -->
+        <div class="description">
+            If you are the administrator, verify your infrastructure configuration.
+            No further action is required from visitors. This service is no longer
+            operational and all inbound requests are rejected.
         </div>
-        <div class="request-id">
-            REQUEST ID: x9Ym2LpQ_3wTrfK1nsO_Ag
+
+        <!-- Referans kodu -->
+        <div class="reference-box">
+            <span class="ref-label">Reference ID</span>
+            <span class="ref-code">x9Ym2LpQ_3wTrfK1nsO_Ag</span>
+            <button class="copy-btn" onclick="copyRef()">Copy</button>
+        </div>
+
+        <!-- Canlı zaman damgası -->
+        <div class="timestamp-row">
+            <span>Server Time (UTC)</span>
+            <span class="server-time" id="liveTimestamp">--</span>
         </div>
     </div>
+
+    <script>
+        // Canlı UTC saat
+        function updateTimestamp() {
+            const now = new Date();
+            const iso = now.toISOString().replace('T', ' ').slice(0, 19) + 'Z';
+            document.getElementById('liveTimestamp').innerText = iso;
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+
+        // Referans kopyalama
+        function copyRef() {
+            const code = document.querySelector('.ref-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.innerText = 'Copied';
+                setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
